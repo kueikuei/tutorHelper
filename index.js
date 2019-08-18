@@ -2,8 +2,8 @@ var linebot = require('linebot');
 var express = require('express');
 var admin = require("firebase-admin");
 admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(process.env.FirebaseKey)),
-    // credential: admin.credential.cert(require("./sabot-dca8c-firebase-adminsdk-mqrmy-1c07d286ac.json")),
+    // credential: admin.credential.cert(JSON.parse(process.env.FirebaseKey)),
+    credential: admin.credential.cert(require("./sabot-dca8c-firebase-adminsdk-mqrmy-1c07d286ac.json")),
     databaseURL: "https://sabot-dca8c.firebaseio.com"
 });
 
@@ -16,7 +16,7 @@ var bot
 var keyList = []
 
 // 本地環境測試
-// var localConfig = require('./localConfig.json')
+var localConfig = require('./localConfig.json')
 var localConfig
 if (localConfig) {
     bot = linebot({
@@ -35,7 +35,7 @@ else {
 }
 
 bot.on('message', function (event) {
-    // console.log(event.message.text, event)
+    console.log(event.message.text, event)
     // 沒有此 user id 就新增
     // if (keyList.indexOf(event.source.userId) === -1) {
     //     keyList.push(event.source.userId)
