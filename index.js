@@ -13,7 +13,7 @@ var bot
 var keyList = []
 // 本地環境測試
 var localConfig = require('./localConfig.json')
-var localConfig
+// var localConfig
 if (localConfig) {
     bot = linebot({
         channelId: localConfig[0].channelId,
@@ -77,9 +77,13 @@ db.ref('tutor').on('value', function (snapshot) {
 const app = express();
 const linebotParser = bot.parser();
 // app.post('/', linebotParser);
-app.post('/',function (req, res, linebotParser){
-    res.status(200)
+
+app.get('/',function (req, res) {
+    res.send('hello bot')
 })
+
+app.post('/linewebhook', linebotParser)
+
 // Bot所監聽的webhook路徑與port
 // for local test
 var server = app.listen(process.env.PORT || 8080, function (req,res) {
