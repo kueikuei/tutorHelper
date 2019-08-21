@@ -15,6 +15,8 @@
     "express": "^4.16.4",
     "firebase-admin": "^7.3.0",
     "linebot": "^1.4.1",
+    "mysql": "^2.17.1",
+    "node-fetch": "^2.6.0",
     "python-js": "^0.9.8"
   },
   "devDependencies": {
