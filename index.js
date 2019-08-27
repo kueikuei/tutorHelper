@@ -69,7 +69,7 @@ bot.on('message', function (event) {
         try {
             // 根據關鍵字進行判斷
             judgeStr(event.message.text)
-            
+
         }
         catch (e) {
             console.log(e) // 把例外物件傳給錯誤處理器
@@ -88,57 +88,57 @@ bot.on('message', function (event) {
                     // fetch('http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?lineid=56sd4f5s6df4&lineBotID=U3b90812bccb505e9a03722a0a772c894', {
                     method: 'GET'
                 })
-                .then(res =>
-                    // 轉成 json
-                    res.json()
-                )
-                .then((json) => {
-                    // 取得學生名稱
-                    var stuList = json.Message
+                    .then(res =>
+                        // 轉成 json
+                        res.json()
+                    )
+                    .then((json) => {
+                        // 取得學生名稱
+                        var stuList = json.Message
 
-                    if (json.Result === 'T') {
-                        var studentsList = []
-                        var msgStr = {
-                            "type": "template",
-                            "altText": "this is a buttons template",
-                            "template": {
-                                "type": "buttons",
-                                "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
-                                "title": "請選擇要請假的學生姓名",
-                                "text": "請一次操作一位學員"
+                        if (json.Result === 'T') {
+                            var studentsList = []
+                            var msgStr = {
+                                "type": "template",
+                                "altText": "this is a buttons template",
+                                "template": {
+                                    "type": "buttons",
+                                    "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
+                                    "title": "請選擇要請假的學生姓名",
+                                    "text": "請一次操作一位學員"
+                                }
                             }
+
+                            stuList.forEach((data) => {
+                                var stuObj = {
+                                    "type": "datetimepicker",
+                                    "mode": "date",
+                                    "initial": "2019-08-07",
+                                    "max": "2020-08-07",
+                                    "min": "2019-08-07"
+                                }
+                                stuObj.data = `我要請假-${data.id}`
+                                stuObj.label = data.name
+                                studentsList.push(stuObj)
+                            })
+
+                            msgStr.template.actions = studentsList
+
+                            // 傳送 JSON msg
+                            rtnMsg(msgStr)
+
+                        } else if (json.Result === 'F') {
+                            return new Promise((res, rej) => {
+                                rej(json.Message)
+                            })
                         }
 
-                        stuList.forEach((data) => {
-                            var stuObj = {
-                                "type": "datetimepicker",
-                                "mode": "date",
-                                "initial": "2019-08-07",
-                                "max": "2020-08-07",
-                                "min": "2019-08-07"
-                            }
-                            stuObj.data = `我要請假-${data.id}`
-                            stuObj.label = data.name
-                            studentsList.push(stuObj)
-                        })
-
-                        msgStr.template.actions = studentsList
-
-                        // 傳送 JSON msg
-                        rtnMsg(msgStr)
-
-                    } else if (json.Result === 'F') {
-                        return new Promise((res, rej) => {
-                            rej(json.Message)
-                        })
-                    }
-
-                })
-                .catch((err) => {
-                    console.log('錯誤:', err);
-                })
+                    })
+                    .catch((err) => {
+                        console.log('錯誤:', err);
+                    })
             }
-            if (str.indexOf('病假')> -1) {
+            if (str.indexOf('病假') > -1) {
                 var lv = str.split('-')
 
                 if (myLeavePostBack[0]) {
@@ -147,33 +147,33 @@ bot.on('message', function (event) {
                     console.log('檢查請假總訊息', myLeavePostBack)
 
                     // 插入請假資料並將事件回傳物件當參數傳過去
-                    leave(myLeavePostBack[0],event)
+                    leave(myLeavePostBack[0], event)
                     // 清空
                     myLeavePostBack = []
                 }
                 // TODO:寫入成功後也要回傳訊息
 
             }
-            if (str.indexOf('事假')> -1) {
+            if (str.indexOf('事假') > -1) {
                 var lv = str.split('-')
 
                 if (myLeavePostBack[0]) {
                     myLeavePostBack[0].remark = '無'
                     myLeavePostBack[0].type = lv[1]
                     console.log('檢查請假總訊息', myLeavePostBack)
-                    leave(myLeavePostBack[0],event)
+                    leave(myLeavePostBack[0], event)
                     myLeavePostBack = []
                 }
 
             }
-            if (str.indexOf('颱風假')> -1) {
+            if (str.indexOf('颱風假') > -1) {
                 var lv = str.split('-')
 
                 if (myLeavePostBack[0]) {
                     myLeavePostBack[0].remark = '無'
                     myLeavePostBack[0].type = lv[1]
                     console.log('檢查請假總訊息', myLeavePostBack)
-                    leave(myLeavePostBack[0],event)
+                    leave(myLeavePostBack[0], event)
                     myLeavePostBack = []
                 }
 
@@ -186,10 +186,10 @@ bot.on('message', function (event) {
                 }
 
             }
-            if(myLeavePostBack[0] && myLeavePostBack[0].type === '4'){
+            if (myLeavePostBack[0] && myLeavePostBack[0].type === '4') {
                 myLeavePostBack[0].remark = event.message.text
-                if(myLeavePostBack[0].remark!=='請輸入請假理由：'){
-                    leave(myLeavePostBack[0],event)
+                if (myLeavePostBack[0].remark !== '請輸入請假理由：') {
+                    leave(myLeavePostBack[0], event)
                     myLeavePostBack = []
                 }
             }
@@ -228,61 +228,61 @@ bot.on('message', function (event) {
                 fetch(leaveUrl, {
                     method: 'GET'
                 })
-                .then(res =>
-                    // 轉成 json
-                    res.json()
-                )
-                .then((json) => {
-                    // 取得學生名稱
-                    var stuList = json.Message
+                    .then(res =>
+                        // 轉成 json
+                        res.json()
+                    )
+                    .then((json) => {
+                        // 取得學生名稱
+                        var stuList = json.Message
 
-                    if (json.Result === 'T') {
-                        var studentsList = []
-                        var msgStr = {
-                            "type": "template",
-                            "altText": "this is a buttons template",
-                            "template": {
-                                "type": "buttons",
-                                "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
-                                "title": "請選擇要請假的學生姓名",
-                                "text": "請一次操作一位學員"
+                        if (json.Result === 'T') {
+                            var studentsList = []
+                            var msgStr = {
+                                "type": "template",
+                                "altText": "this is a buttons template",
+                                "template": {
+                                    "type": "buttons",
+                                    "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
+                                    "title": "請選擇要請假的學生姓名",
+                                    "text": "請一次操作一位學員"
+                                }
                             }
+
+                            stuList.forEach((data) => {
+                                var stuObj = {
+                                    "type": "postback",
+                                    "mode": "date",
+                                    "initial": "2019-08-07",
+                                    "max": "2020-08-07",
+                                    "min": "2019-08-07"
+                                }
+                                // 偷偷將 學生id與 name 塞入
+                                stuObj.data = `查詢請假-${data.id}-${data.name}`
+                                stuObj.label = data.name
+                                studentsList.push(stuObj)
+                            })
+
+                            msgStr.template.actions = studentsList
+
+                            // 傳送 JSON msg
+                            rtnMsg(msgStr)
+
+                        } else if (json.Result === 'F') {
+                            return new Promise((res, rej) => {
+                                rej(json.Message)
+                            })
                         }
 
-                        stuList.forEach((data) => {
-                            var stuObj = {
-                                "type": "postback",
-                                "mode": "date",
-                                "initial": "2019-08-07",
-                                "max": "2020-08-07",
-                                "min": "2019-08-07"
-                            }
-                            // 偷偷將 學生id與 name 塞入
-                            stuObj.data = `查詢請假-${data.id}-${data.name}`
-                            stuObj.label = data.name
-                            studentsList.push(stuObj)
-                        })
-
-                        msgStr.template.actions = studentsList
-
-                        // 傳送 JSON msg
-                        rtnMsg(msgStr)
-
-                    } else if (json.Result === 'F') {
-                        return new Promise((res, rej) => {
-                            rej(json.Message)
-                        })
-                    }
-
-                })
-                .catch((err) => {
-                    console.log('錯誤:', err);
-                })
+                    })
+                    .catch((err) => {
+                        console.log('錯誤:', err);
+                    })
 
                 // step2: 搜尋請假紀錄 leave/getLeaveList
                 // step3: 進行銷假
             }
-            if (str.indexOf('我要銷假')> -1) {
+            if (str.indexOf('我要銷假') > -1) {
                 // http://34.80.63.226:3003/leave/deleteLeave?id=14
                 var lvID = str.split('-')[1]
                 var delLeaveUrl = APIUrl + 'leave/deleteLeave?'
@@ -292,20 +292,20 @@ bot.on('message', function (event) {
                 fetch(delLeaveUrl, {
                     method: 'GET',
                 })
-                .then(res =>
-                    res.json()
-                )
-                .then(json =>{
-                    if(json.Result==='T'){
-                        // TODO:銷假成功 Temp
-                        rtnMsg('銷假成功')
-                    }
-                    if(json.Result==='F'){rtnMsg(json.Message)}
-                    if(json.Result==='R'){rtnMsg(json.Message)}
-                })
-                .catch((err) => {
-                    console.log('錯誤:', err);
-                })
+                    .then(res =>
+                        res.json()
+                    )
+                    .then(json => {
+                        if (json.Result === 'T') {
+                            // TODO:銷假成功 Temp
+                            rtnMsg('銷假成功')
+                        }
+                        if (json.Result === 'F') { rtnMsg(json.Message) }
+                        if (json.Result === 'R') { rtnMsg(json.Message) }
+                    })
+                    .catch((err) => {
+                        console.log('錯誤:', err);
+                    })
             }
 
             if (str === "今日功課 / 成績") {
@@ -317,55 +317,56 @@ bot.on('message', function (event) {
                     // fetch('http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?lineid=56sd4f5s6df4&lineBotID=U3b90812bccb505e9a03722a0a772c894', {
                     method: 'GET'
                 })
-                .then(res =>
-                    // 轉成 json
-                    res.json()
-                )
-                .then((json) => {
-                    // 取得學生名稱
-                    var stuList = json.Message
+                    .then(res =>
+                        // 轉成 json
+                        res.json()
+                    )
+                    .then((json) => {
+                        // 取得學生名稱
+                        var stuList = json.Message
 
-                    if (json.Result === 'T') {
-                        var studentsList = []
-                        var msgStr = {
-                            "type": "template",
-                            "altText": "this is a buttons template",
-                            "template": {
-                                "type": "buttons",
-                                "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
-                                "title": "請選擇要查詢的學生姓名",
-                                "text": "請一次操作一位學員"
+                        if (json.Result === 'T') {
+                            var studentsList = []
+                            var msgStr = {
+                                "type": "template",
+                                "altText": "this is a buttons template",
+                                "template": {
+                                    "type": "buttons",
+                                    "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
+                                    "title": "請選擇要查詢的學生姓名",
+                                    "text": "請一次操作一位學員"
+                                }
                             }
+
+                            stuList.forEach((data) => {
+                                var stuObj = {
+                                    "type": "postback"
+                                }
+
+                                stuObj.data = `今日查詢-${data.id}-${data.name}`
+                                stuObj.label = data.name
+                                stuObj.text = data.name
+                                studentsList.push(stuObj)
+                            })
+
+                            msgStr.template.actions = studentsList
+
+                            // 傳送 JSON msg
+                            rtnMsg(msgStr)
+
+                        } else if (json.Result === 'F') {
+                            return new Promise((res, rej) => {
+                                rej(json.Message)
+                            })
                         }
 
-                        stuList.forEach((data) => {
-                            var stuObj = {
-                                "type": "postback"
-                            }
-
-                            stuObj.data = `功課查詢-${data.id}`
-                            stuObj.label = data.name
-                            stuObj.text = data.name
-                            studentsList.push(stuObj)
-                        })
-
-                        msgStr.template.actions = studentsList
-
-                        // 傳送 JSON msg
-                        rtnMsg(msgStr)
-
-                    } else if (json.Result === 'F') {
-                        return new Promise((res, rej) => {
-                            rej(json.Message)
-                        })
-                    }
-
-                })
-                .catch((err) => {
-                    console.log('錯誤:', err);
-                })
+                    })
+                    .catch((err) => {
+                        console.log('錯誤:', err);
+                    })
 
                 // 今日成績查詢
+
             }
             if (str === "身份註冊") {
                 var msgStr = {
@@ -477,43 +478,43 @@ bot.on('follow', function (event) {
                 "lineId": botID
             })
         })
-        .then(res =>
-            res.json()
-        )
-        .then(json =>{
-            // 設定 richmenu
-            // setRichmenu(json.Message[0].role,userID)
-            // 測次用
-            setRichmenuUrl = 'http://localhost:3001/setRichmenu?'
-            setRichmenuUrl = setRichmenuUrl + `type=${json.Message[0].role}&`
-            setRichmenuUrl = setRichmenuUrl + 'userID=' + userID
-            
-            fetch(setRichmenuUrl, {
-                method: 'GET'
-            })
             .then(res =>
-                // 轉成 json
                 res.json()
             )
-            .then((json) => {
+            .then(json => {
+                // 設定 richmenu
+                // setRichmenu(json.Message[0].role,userID)
+                // 測次用
+                setRichmenuUrl = 'http://localhost:3001/setRichmenu?'
+                setRichmenuUrl = setRichmenuUrl + `type=${json.Message[0].role}&`
+                setRichmenuUrl = setRichmenuUrl + 'userID=' + userID
 
-                if (json.Result === 'T') {
-                    // console.log('setRichmenuUrl',json)
-                    // 傳送 JSON msg'
-                    console.log('json.Message',json.Message)
-                    rtnMsg(json.Message)
+                fetch(setRichmenuUrl, {
+                    method: 'GET'
+                })
+                    .then(res =>
+                        // 轉成 json
+                        res.json()
+                    )
+                    .then((json) => {
 
-                } else if (json.Result === 'R') {
-                    return new Promise((res, rej) => {
-                        rej(json.Message)
+                        if (json.Result === 'T') {
+                            // console.log('setRichmenuUrl',json)
+                            // 傳送 JSON msg'
+                            console.log('json.Message', json.Message)
+                            rtnMsg(json.Message)
+
+                        } else if (json.Result === 'R') {
+                            return new Promise((res, rej) => {
+                                rej(json.Message)
+                            })
+                        }
                     })
-                }
-            })
-            .catch((err) => {
-                console.log('錯誤:', err);
-            })
+                    .catch((err) => {
+                        console.log('錯誤:', err);
+                    })
 
-        })
+            })
 
     })
 
@@ -565,68 +566,68 @@ bot.on('postback', function (event) {
         fetch(leaveTagUrl, {
             method: 'GET'
         })
-        .then(res =>
-            // 轉成 json
-            res.json()
-        )
-        .then((json) => {
-            console.log('leaveTagUrl', json)
-            // 取得學生名稱
-            var tagList = json.Message
+            .then(res =>
+                // 轉成 json
+                res.json()
+            )
+            .then((json) => {
+                console.log('leaveTagUrl', json)
+                // 取得學生名稱
+                var tagList = json.Message
 
-            if (json.Result === 'T') {
-                var tagInfoList = []
-                var msgStr = {
-                    "type": "template",
-                    "altText": "this is a buttons template",
-                    "template": {
-                        "type": "buttons",
-                        "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039368.svg",
-                        "title": "請選擇您的請假理由",
-                        "text": "其他請假理由請點擊「其他」文字輸入"
+                if (json.Result === 'T') {
+                    var tagInfoList = []
+                    var msgStr = {
+                        "type": "template",
+                        "altText": "this is a buttons template",
+                        "template": {
+                            "type": "buttons",
+                            "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039368.svg",
+                            "title": "請選擇您的請假理由",
+                            "text": "其他請假理由請點擊「其他」文字輸入"
+                        }
                     }
+
+                    tagList.forEach((data) => {
+                        var stuObj = {
+                            "type": "message",
+                        }
+                        // stuObj.type = data.id
+                        // TODO:嘗試把stuObj.type帶入
+                        stuObj.text = data.name + `-${data.id}`
+                        stuObj.label = data.name
+                        if (data.name === '其他') {
+                            stuObj.text = '請輸入請假理由：'
+                        }
+
+                        tagInfoList.push(stuObj)
+                    })
+
+                    msgStr.template.actions = tagInfoList
+
+                    // 傳送 JSON msg
+                    event.reply(msgStr).then(function (data) {
+                        // 傳送訊息成功時，可在此寫程式碼 
+                        console.log(data);
+                    }).catch(function (error) {
+                        // 傳送訊息失敗時，可在此寫程式碼 
+                        console.log('錯誤產生，錯誤碼：' + error);
+                    });
+
+                } else if (json.Result === 'R') {
+                    return new Promise((res, rej) => {
+                        rej(json.Message)
+                    })
                 }
 
-                tagList.forEach((data) => {
-                    var stuObj = {
-                        "type": "message",
-                    }
-                    // stuObj.type = data.id
-                    // TODO:嘗試把stuObj.type帶入
-                    stuObj.text = data.name + `-${data.id}`
-                    stuObj.label = data.name
-                    if(data.name==='其他'){
-                        stuObj.text = '請輸入請假理由：'
-                    }
-                    
-                    tagInfoList.push(stuObj)
-                })
-
-                msgStr.template.actions = tagInfoList
-
-                // 傳送 JSON msg
-                event.reply(msgStr).then(function (data) {
-                    // 傳送訊息成功時，可在此寫程式碼 
-                    console.log(data);
-                }).catch(function (error) {
-                    // 傳送訊息失敗時，可在此寫程式碼 
-                    console.log('錯誤產生，錯誤碼：' + error);
-                });
-
-            } else if (json.Result === 'R') {
-                return new Promise((res, rej) => {
-                    rej(json.Message)
-                })
-            }
-
-        })
-        .catch((err) => {
-            console.log('錯誤:', err);
-        })
+            })
+            .catch((err) => {
+                console.log('錯誤:', err);
+            })
 
     }
 
-    if (key[0] === '查詢請假' ){
+    if (key[0] === '查詢請假') {
         // TODO:從今天開始到選擇的銷假時間都列出來
 
         // TODO:參數先寫死，後續會用到
@@ -646,7 +647,7 @@ bot.on('postback', function (event) {
         var botID = 'U3b90812bccb505e9a03722a0a772c894'
         var startDate = '2018-01-01'
         var endDate = '2019-12-31'
-        
+
         var leaveListUrl = APIUrl + 'leave/getLeaveList?'
         leaveListUrl = leaveListUrl + 'sid=' + sid + '&'
         leaveListUrl = leaveListUrl + 'lineBotID=' + botID + '&'
@@ -656,73 +657,82 @@ bot.on('postback', function (event) {
         fetch(leaveListUrl, {
             method: 'GET'
         })
-        .then(res =>
-            // 轉成 json
-            res.json()
-        )
-        .then((json) => {
-            console.log('getLeaveList', json)
-            // 取得學生名稱
-            if (json.Result === 'T') {
-                var columns = []
-                var temp = {
-                    "type": "template",
-                    "altText": "this is a carousel template",
-                    "template": {
-                    "type": "carousel",
-                    "actions": []
+            .then(res =>
+                // 轉成 json
+                res.json()
+            )
+            .then((json) => {
+                console.log('getLeaveList', json)
+                // 取得學生名稱
+                if (json.Result === 'T') {
+                    var columns = []
+                    var temp = {
+                        "type": "template",
+                        "altText": "this is a carousel template",
+                        "template": {
+                            "type": "carousel",
+                            "actions": []
+                        }
                     }
+                    json.Message.forEach(data => {
+
+                        var myData = {
+                            "title": `請假日期：${data.startDate}~${data.endDate}`,
+                            "text": `請假學員：${studentName}`,
+                            "actions": [
+                                {
+                                    "type": "message",
+                                    "label": "我要銷假",
+                                    "text": `我要銷假-${data.id}`
+                                }
+                            ]
+                        }
+
+                        columns.push(myData)
+                    })
+
+                    temp.template.columns = columns
+                    rtnMsg(temp)
+                } else if (json.Result === 'R') {
+                    return new Promise((res, rej) => {
+                        rej(json.Message)
+                    })
                 }
-                json.Message.forEach(data=>{   
-
-                    var myData= {   
-                        "title": `請假日期：${data.startDate}~${data.endDate}`,
-                        "text": `請假學員：${studentName}`,
-                        "actions": [
-                            {
-                            "type": "message",
-                            "label": "我要銷假",
-                            "text": `我要銷假-${data.id}`
-                            }
-                        ]
-                    }
-
-                    columns.push(myData)
-                })
-
-                temp.template.columns = columns
-                rtnMsg(temp)
-            }else if (json.Result === 'R') {
-                return new Promise((res, rej) => {
-                    rej(json.Message)
-                })
-            }
-        })
-        .catch((err) => {
-            console.log('錯誤:', err);
-        })
+            })
+            .catch((err) => {
+                console.log('錯誤:', err);
+            })
 
     }
-    
-    if (key[0]=== '功課查詢'){
+
+    if (key[0] === '今日查詢') {
         // http://34.80.63.226:3003/homework/getStudentHomework?
         // sid=32&searchDate=2019-08-22&
         // lineBotID=U3b90812bccb505e9a03722a0a772c894
 
+        // TODO: 當日
         // var t = new Date()
         // var y = t.getFullYear()
         // var m = t.getMonth()
         // var d = t.getDate()
         // var searchDate = `${y}-${m}-${d}`
 
+
+        // 取得學生功課
         var sid = key[1]
         var searchDate = '2019-08-22' //先定死
-        var contents = []
+        var tempArys = []
+        var name = key[2]
 
         var getStudentHomeworkUrl = APIUrl + 'homework/getStudentHomework?'
         getStudentHomeworkUrl = getStudentHomeworkUrl + 'sid=' + sid + '&'
         getStudentHomeworkUrl = getStudentHomeworkUrl + 'searchDate=' + searchDate + '&'
-        getStudentHomeworkUrl = getStudentHomeworkUrl + 'lineBotID=' + userID 
+        getStudentHomeworkUrl = getStudentHomeworkUrl + 'lineBotID=' + userID
+
+        var getStudentGradeUrl = APIUrl + 'grade/getStudentGrade?'
+        getStudentGradeUrl = getStudentGradeUrl + 'sid=' + sid + '&'
+        getStudentGradeUrl = getStudentGradeUrl + 'searchDate=' + searchDate + '&'
+        getStudentGradeUrl = getStudentGradeUrl + 'lineBotID=' + userID
 
         fetch(getStudentHomeworkUrl, {
             method: 'GET'
@@ -737,7 +747,382 @@ bot.on('postback', function (event) {
             // 取得學生名稱
             if (json.Result === 'T') {
                 var contents = []
-                var temp = {
+                var honeWorkTemp = {
+                    "type": "flex",
+                    "altText": "Flex Message",
+                    "contents": {
+                        "type": "bubble",
+                        "direction": "ltr",
+                        "header": {
+                            "type": "box",
+                            "layout": "vertical",
+                            "flex": 0,
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": `${searchDate}`,
+                                    "size": "lg",
+                                    "align": "center",
+                                    "weight": "bold"
+                                },
+                                {
+                                    "type": "separator",
+                                    "margin": "sm"
+                                }
+                            ]
+                        },
+                        "hero": {
+                            "type": "image",
+                            "url": "https://image.flaticon.com/icons/svg/1039/1039352.svg",
+                            "size": "full",
+                            "aspectRatio": "1.51:1",
+                            "aspectMode": "fit"
+                        },
+                        "body": {
+                            "type": "box",
+                            "layout": "vertical"
+                        },
+                        "footer": {
+                            "type": "box",
+                            "layout": "horizontal",
+                            "contents": [
+                                {
+                                    "type": "button",
+                                    "action": {
+                                        "type": "datetimepicker",
+                                        "label": "查看其他日期",
+                                        "data": `功課查詢-${sid}`,
+                                        "mode": "date",
+                                        "initial": "2019-07-29",
+                                        "max": "2020-07-29",
+                                        "min": "2019-07-22"
+                                    }
+                                }
+                            ]
+                        },
+                        "styles": {
+                            "hero": {
+                                "backgroundColor": "#ECEAEA"
+                            }
+                        }
+                    }
+                }
+
+                json.Message.forEach(data => {
+
+                    var myData1 = {
+                        "type": "text",
+                        "text": `${data.title}`,
+                        "align": "start",
+                        "weight": "bold"
+                    }
+                    var myData2 = {
+                        "type": "text",
+                        "text": `${data.homeworkContent}`
+                    }
+                    var myData3 = {
+                        "type": "separator"
+                    }
+                    contents.push(myData1, myData2, myData3)
+                })
+
+                honeWorkTemp.contents.body.contents = contents
+
+
+                tempArys.push(honeWorkTemp)
+
+                return tempArys
+                // rtnMsg([honeWorkTemp,gradeTemp])
+
+            } else if (json.Result === 'R') {
+                rtnMsg(json.Message)
+                return new Promise((res, rej) => {
+                    rej(json.Message)
+                })
+            }
+        })
+        .then(tempArys => {
+            fetch(getStudentGradeUrl, {
+                method: 'GET'
+            })
+            .then(res =>
+                // 轉成 json
+                res.json()
+            )
+            .then((json) => {
+
+                // 取得學生名稱
+                if (json.Result === 'T') {
+                    var contents = [{
+                        "type": "text",
+                        "text": "◎成績",
+                        "align": "start",
+                        "weight": "bold"
+                    }]
+                    var gradeTemp = {
+                        "type": "flex",
+                        "altText": "Flex Message",
+                        "contents": {
+                          "type": "bubble",
+                          "direction": "ltr",
+                          "header": {
+                            "type": "box",
+                            "layout": "vertical",
+                            "contents": [
+                              {
+                                "type": "text",
+                                "text": `${searchDate}`,
+                                "size": "lg",
+                                "align": "center",
+                                "weight": "bold"
+                              },
+                              {
+                                "type": "separator"
+                              }
+                            ]
+                          },
+                          "hero": {
+                            "type": "image",
+                            "url": "https://image.flaticon.com/icons/svg/1039/1039329.svg",
+                            "size": "full",
+                            "aspectRatio": "1.51:1",
+                            "aspectMode": "fit"
+                          },
+                          "body": {
+                            "type": "box",
+                            "layout": "vertical"
+                          },
+                          "footer": {
+                            "type": "box",
+                            "layout": "horizontal",
+                            "contents": [
+                              {
+                                  "type": "button",
+                                  "action": {
+                                    "type": "datetimepicker",
+                                    "label": "查看其他日期",
+                                    "data": `成績查詢-${sid}-${name}`,
+                                    "mode": "date",
+                                    "initial": "2019-07-29",
+                                    "max": "2020-07-29",
+                                    "min": "2019-01-22"
+                                  }
+                                }
+                            ]
+                          },
+                          "styles": {
+                            "hero": {
+                              "backgroundColor": "#ECEAEA"
+                            },
+                            "footer": {
+                              "separator": false
+                            }
+                          }
+                        }
+                    }
+
+                    json.Message.forEach(data => {
+                        var data1 = {
+                            "type": "text",
+                            "text": `學生姓名：${name}`
+                        }
+                        var data2 = {
+                            "type": "text",
+                            "text": `考試日期：${data.examDate}`
+                        }
+                        var data3 = {
+                            "type": "text",
+                            "text": `課程：${data.title}`
+                        }
+                        var data4 = {
+                            "type": "text",
+                            "text": `成績：${data.grade}`
+                        }
+                        var data5 = {
+                            "type": "separator",
+                            "margin": "lg",
+                            "color": "#DADDE3"
+                        }
+
+                        contents.push(data1, data2, data3, data4, data5)
+                    })
+
+                    gradeTemp.contents.body.contents = contents
+
+
+                    tempArys.push(gradeTemp)
+
+                    rtnMsg(tempArys)
+
+                } else if (json.Result === 'R') {
+                    rtnMsg(json.Message)
+                    return new Promise((res, rej) => {
+                        rej(json.Message)
+                    })
+                }
+            })
+            .catch((err) => {
+                console.log('錯誤:', err);
+            })
+            // console.log('data',tempArys)
+        })
+        .catch((err) => {
+            console.log('錯誤:', err);
+        })
+
+    }
+    if (key[0] === '功課查詢') {
+        // 取得學生功課
+        var sid = key[1]
+        var searchDate = event.postback.params.date //先定死
+        var tempArys = []
+        var name = key[2]
+
+        var getStudentHomeworkUrl = APIUrl + 'homework/getStudentHomework?'
+        getStudentHomeworkUrl = getStudentHomeworkUrl + 'sid=' + sid + '&'
+        getStudentHomeworkUrl = getStudentHomeworkUrl + 'searchDate=' + searchDate + '&'
+        getStudentHomeworkUrl = getStudentHomeworkUrl + 'lineBotID=' + userID
+
+        fetch(getStudentHomeworkUrl, {
+            method: 'GET'
+        })
+        .then(res =>
+            // 轉成 json
+            res.json()
+        )
+        .then((json) => {
+            // 取得學生名稱
+            if (json.Result === 'T') {
+                var contents = []
+                var honeWorkTemp = {
+                    "type": "flex",
+                    "altText": "Flex Message",
+                    "contents": {
+                        "type": "bubble",
+                        "direction": "ltr",
+                        "header": {
+                            "type": "box",
+                            "layout": "vertical",
+                            "flex": 0,
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": `${searchDate}`,
+                                    "size": "lg",
+                                    "align": "center",
+                                    "weight": "bold"
+                                },
+                                {
+                                    "type": "separator",
+                                    "margin": "sm"
+                                }
+                            ]
+                        },
+                        "hero": {
+                            "type": "image",
+                            "url": "https://image.flaticon.com/icons/svg/1039/1039352.svg",
+                            "size": "full",
+                            "aspectRatio": "1.51:1",
+                            "aspectMode": "fit"
+                        },
+                        "body": {
+                            "type": "box",
+                            "layout": "vertical"
+                        },
+                        "footer": {
+                            "type": "box",
+                            "layout": "horizontal",
+                            "contents": [
+                                {
+                                    "type": "button",
+                                    "action": {
+                                        "type": "datetimepicker",
+                                        "label": "查看其他日期",
+                                        "data": `功課查詢-${sid}`,
+                                        "mode": "date",
+                                        "initial": "2019-07-29",
+                                        "max": "2020-07-29",
+                                        "min": "2019-07-22"
+                                    }
+                                }
+                            ]
+                        },
+                        "styles": {
+                            "hero": {
+                                "backgroundColor": "#ECEAEA"
+                            }
+                        }
+                    }
+                }
+
+                json.Message.forEach(data => {
+
+                    var myData1 = {
+                        "type": "text",
+                        "text": `${data.title}`,
+                        "align": "start",
+                        "weight": "bold"
+                    }
+                    var myData2 = {
+                        "type": "text",
+                        "text": `${data.homeworkContent}`
+                    }
+                    var myData3 = {
+                        "type": "separator"
+                    }
+                    contents.push(myData1, myData2, myData3)
+                })
+
+                honeWorkTemp.contents.body.contents = contents
+
+                tempArys.push(honeWorkTemp)
+
+                rtnMsg(tempArys)
+
+            } else if (json.Result === 'R') {
+                rtnMsg(json.Message)
+                return new Promise((res, rej) => {
+                    rej(json.Message)
+                })
+            }
+        })
+        .catch((err) => {
+            console.log('錯誤:', err);
+        })
+
+    }
+
+    if (key[0] === '成績查詢'){
+        console.log('成績查詢確定')
+        // 取得學生功課
+        var sid = key[1]
+        var searchDate = event.postback.params.date //先定死
+        var tempArys = []
+        var name = key[2]
+
+        var getStudentGradeUrl = APIUrl + 'grade/getStudentGrade?'
+        getStudentGradeUrl = getStudentGradeUrl + 'sid=' + sid + '&'
+        getStudentGradeUrl = getStudentGradeUrl + 'searchDate=' + searchDate + '&'
+        getStudentGradeUrl = getStudentGradeUrl + 'lineBotID=' + userID
+
+        fetch(getStudentGradeUrl, {
+            method: 'GET'
+        })
+        .then(res =>
+            // 轉成 json
+            res.json()
+        )
+        .then((json) => {
+
+            // 取得學生名稱
+            if (json.Result === 'T') {
+                var contents = [{
+                    "type": "text",
+                    "text": "◎成績",
+                    "align": "start",
+                    "weight": "bold"
+                }]
+                var gradeTemp = {
                     "type": "flex",
                     "altText": "Flex Message",
                     "contents": {
@@ -746,7 +1131,6 @@ bot.on('postback', function (event) {
                       "header": {
                         "type": "box",
                         "layout": "vertical",
-                        "flex": 0,
                         "contents": [
                           {
                             "type": "text",
@@ -756,14 +1140,13 @@ bot.on('postback', function (event) {
                             "weight": "bold"
                           },
                           {
-                            "type": "separator",
-                            "margin": "sm"
+                            "type": "separator"
                           }
                         ]
                       },
                       "hero": {
                         "type": "image",
-                        "url": "https://image.flaticon.com/icons/svg/1039/1039352.svg",
+                        "url": "https://image.flaticon.com/icons/svg/1039/1039329.svg",
                         "size": "full",
                         "aspectRatio": "1.51:1",
                         "aspectMode": "fit"
@@ -777,48 +1160,61 @@ bot.on('postback', function (event) {
                         "layout": "horizontal",
                         "contents": [
                           {
-                            "type": "button",
-                            "action": {
-                              "type": "datetimepicker",
-                              "label": "查看其他日期",
-                              "data": `功課查詢-${sid}`,
-                              "mode": "date",
-                              "initial": "2019-07-29",
-                              "max": "2020-07-29",
-                              "min": "2019-07-22"
+                              "type": "button",
+                              "action": {
+                                "type": "datetimepicker",
+                                "label": "查看其他日期",
+                                "data": `成績查詢-${sid}-${name}`,
+                                "mode": "date",
+                                "initial": "2019-07-29",
+                                "max": "2020-07-29",
+                                "min": "2019-01-22"
+                              }
                             }
-                          }
                         ]
                       },
                       "styles": {
                         "hero": {
                           "backgroundColor": "#ECEAEA"
+                        },
+                        "footer": {
+                          "separator": false
                         }
                       }
                     }
                 }
 
-                json.Message.forEach(data=>{
+                json.Message.forEach(data => {
+                    var data1 = {
+                        "type": "text",
+                        "text": `學生姓名：${name}`
+                    }
+                    var data2 = {
+                        "type": "text",
+                        "text": `考試日期：${data.examDate}`
+                    }
+                    var data3 = {
+                        "type": "text",
+                        "text": `課程：${data.title}`
+                    }
+                    var data4 = {
+                        "type": "text",
+                        "text": `成績：${data.grade}`
+                    }
+                    var data5 = {
+                        "type": "separator",
+                        "margin": "lg",
+                        "color": "#DADDE3"
+                    }
 
-                    var myData1= {
-                        "type": "text",
-                        "text": `${data.title}`,
-                        "align": "start",
-                        "weight": "bold"
-                    }
-                    var myData2 = {
-                        "type": "text",
-                        "text": `${data.homeworkContent}`
-                    }
-                    var myData3 = {
-                        "type": "separator"
-                    }
-                    contents.push(myData1,myData2,myData3)
+                    contents.push(data1, data2, data3, data4, data5)
                 })
 
-                temp.contents.body.contents = contents
-                rtnMsg(temp)
-            }else if (json.Result === 'R') {
+                gradeTemp.contents.body.contents = contents
+
+                rtnMsg(gradeTemp)
+
+            } else if (json.Result === 'R') {
                 rtnMsg(json.Message)
                 return new Promise((res, rej) => {
                     rej(json.Message)
@@ -827,9 +1223,7 @@ bot.on('postback', function (event) {
         })
         .catch((err) => {
             console.log('錯誤:', err);
-            
         })
-        
     }
 
     console.log('myLeavePostBack', myLeavePostBack)
@@ -879,9 +1273,9 @@ function rtnMsg(e, msg) {
 }
 
 // 請假 function ()
-function leave(myLeavePostBack,e){
+function leave(myLeavePostBack, e) {
 
-    fetch(APIUrl+'leave/setLeave/back', {
+    fetch(APIUrl + 'leave/setLeave/back', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -889,46 +1283,46 @@ function leave(myLeavePostBack,e){
         // 先以家長進行測試
         body: JSON.stringify(myLeavePostBack)
     })
-    .then(res =>
-        res.json()
-    )
-    .then(json => {
-        //  TODO: 回傳請假結果
-        if (json.Result==='T'){
-            // TODO:補上請假成功樣板
-            console.log('請假結果為:', json)
-            e.reply('請假成功').then(function (data) {
-                // 傳送訊息成功時，可在此寫程式碼 
-                console.log(data);
-            }).catch(function (error) {
-                // 傳送訊息失敗時，可在此寫程式碼 
-                console.log('錯誤產生，錯誤碼：' + error);
-            });
-        }
-        if(json.Result==='F'){
-            console.log('請假結果為:', json)
-            e.reply(json.Message).then(function (data) {
-                // 傳送訊息成功時，可在此寫程式碼 
-                console.log(data);
-            }).catch(function (error) {
-                // 傳送訊息失敗時，可在此寫程式碼 
-                console.log('錯誤產生，錯誤碼：' + error);
-            });
-        }
-        if(json.Result==='R'){
-            console.log('請假結果為:', json)
-            e.reply(json.Message).then(function (data) {
-                // 傳送訊息成功時，可在此寫程式碼 
-                console.log(data);
-            }).catch(function (error) {
-                // 傳送訊息失敗時，可在此寫程式碼 
-                console.log('錯誤產生，錯誤碼：' + error);
-            });
-        }
-    })
-    .catch((err) => {
-        console.log('錯誤:', err);
-    })
+        .then(res =>
+            res.json()
+        )
+        .then(json => {
+            //  TODO: 回傳請假結果
+            if (json.Result === 'T') {
+                // TODO:補上請假成功樣板
+                console.log('請假結果為:', json)
+                e.reply('請假成功').then(function (data) {
+                    // 傳送訊息成功時，可在此寫程式碼 
+                    console.log(data);
+                }).catch(function (error) {
+                    // 傳送訊息失敗時，可在此寫程式碼 
+                    console.log('錯誤產生，錯誤碼：' + error);
+                });
+            }
+            if (json.Result === 'F') {
+                console.log('請假結果為:', json)
+                e.reply(json.Message).then(function (data) {
+                    // 傳送訊息成功時，可在此寫程式碼 
+                    console.log(data);
+                }).catch(function (error) {
+                    // 傳送訊息失敗時，可在此寫程式碼 
+                    console.log('錯誤產生，錯誤碼：' + error);
+                });
+            }
+            if (json.Result === 'R') {
+                console.log('請假結果為:', json)
+                e.reply(json.Message).then(function (data) {
+                    // 傳送訊息成功時，可在此寫程式碼 
+                    console.log(data);
+                }).catch(function (error) {
+                    // 傳送訊息失敗時，可在此寫程式碼 
+                    console.log('錯誤產生，錯誤碼：' + error);
+                });
+            }
+        })
+        .catch((err) => {
+            console.log('錯誤:', err);
+        })
 }
 
 
