@@ -49,22 +49,18 @@ else {
 
 // 訊息事件
 bot.on('message', function (event) {
+    console.log('event.source.profile()',event)
     // 每一次說話都會偵測ID
-    // var userID = event.source.userId;
-    // console.log('userID',userID)
-    // var lineBotID // 沒辦法動態取得
     // var userID = '56sd4f5s6df4' // 測試用
-    // U3b90812bccb505e9a03722a0a772c894
-    var userID = '333@333' // 測試用
-    var lineBotID = 'U3b90812bccb505e9a03722a0a772c894' // 測試用
+    // /leave/setLeave/line
+    // TODO:userID不能從內部定
+    var userID = event.source.userId
+    var lineBotID = '333@333' // 測試用
+    
     var userName = event.source.displayName;
-    // TODO:取得 user ID、lineId
-    // 沒有此 user id 就新增
-    // if (keyList.indexOf(event.source.userId) === -1) {
-    //     keyList.push(event.source.userId)
-    // }
+
     if (event.message.type = 'text') {
-        // console.log('event.message.text',typeof event.message.text)
+
         // 關鍵字回覆
         try {
             // 根據關鍵字進行判斷
@@ -78,65 +74,65 @@ bot.on('message', function (event) {
 
             if (str === "我要請假") {
                 var leaveUrl = "http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?"
-                leaveUrl = leaveUrl + "lineid=" + userID + '&' + 'lineBotID=' + lineBotID
+                // leaveUrl = leaveUrl + "lineid=" + userID + '&' + 'lineBotID=' + lineBotID
+                leaveUrl = leaveUrl + "lineid=" + lineBotID + '&' + 'lineBotID=' + userID
 
                 // var leaveTagUrl = "http://34.80.63.226:3003/tag/getTag/leave/lineApi?"
                 // leaveTagUrl = leaveTagUrl + 'lineBotID=' + lineBotID
                 // studentAccount/getRegisterDetail/stu API
                 // step1: 取得學生名單
                 fetch(leaveUrl, {
-                    // fetch('http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?lineid=56sd4f5s6df4&lineBotID=U3b90812bccb505e9a03722a0a772c894', {
                     method: 'GET'
                 })
-                    .then(res =>
-                        // 轉成 json
-                        res.json()
-                    )
-                    .then((json) => {
-                        // 取得學生名稱
-                        var stuList = json.Message
+                .then(res =>
+                    // 轉成 json
+                    res.json()
+                )
+                .then((json) => {
+                    // 取得學生名稱
+                    var stuList = json.Message
 
-                        if (json.Result === 'T') {
-                            var studentsList = []
-                            var msgStr = {
-                                "type": "template",
-                                "altText": "this is a buttons template",
-                                "template": {
-                                    "type": "buttons",
-                                    "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
-                                    "title": "請選擇要請假的學生姓名",
-                                    "text": "請一次操作一位學員"
-                                }
+                    if (json.Result === 'T') {
+                        var studentsList = []
+                        var msgStr = {
+                            "type": "template",
+                            "altText": "this is a buttons template",
+                            "template": {
+                                "type": "buttons",
+                                "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
+                                "title": "請選擇要請假的學生姓名",
+                                "text": "請一次操作一位學員"
                             }
-
-                            stuList.forEach((data) => {
-                                var stuObj = {
-                                    "type": "datetimepicker",
-                                    "mode": "date",
-                                    "initial": "2019-08-07",
-                                    "max": "2020-08-07",
-                                    "min": "2019-08-07"
-                                }
-                                stuObj.data = `我要請假-${data.id}`
-                                stuObj.label = data.name
-                                studentsList.push(stuObj)
-                            })
-
-                            msgStr.template.actions = studentsList
-
-                            // 傳送 JSON msg
-                            rtnMsg(msgStr)
-
-                        } else if (json.Result === 'F') {
-                            return new Promise((res, rej) => {
-                                rej(json.Message)
-                            })
                         }
 
-                    })
-                    .catch((err) => {
-                        console.log('錯誤:', err);
-                    })
+                        stuList.forEach((data) => {
+                            var stuObj = {
+                                "type": "datetimepicker",
+                                "mode": "date",
+                                "initial": "2019-08-07",
+                                "max": "2020-08-07",
+                                "min": "2019-08-07"
+                            }
+                            stuObj.data = `我要請假-${data.id}`
+                            stuObj.label = data.name
+                            studentsList.push(stuObj)
+                        })
+
+                        msgStr.template.actions = studentsList
+
+                        // 傳送 JSON msg
+                        rtnMsg(msgStr)
+
+                    } else if (json.Result === 'F') {
+                        return new Promise((res, rej) => {
+                            rej(json.Message)
+                        })
+                    }
+
+                })
+                .catch((err) => {
+                    console.log('錯誤:', err);
+                })
             }
             if (str.indexOf('病假') > -1) {
                 var lv = str.split('-')
@@ -195,92 +191,109 @@ bot.on('message', function (event) {
             }
 
             if (str === "請假 / 銷假") {
-                // TODO: role check 身份驗證過了讓他開啟此選單
-                rtnMsg({
-                    "type": "template",
-                    "altText": "this is a buttons template",
-                    "template": {
-                        "type": "buttons",
-                        "actions": [
-                            {
-                                "type": "message",
-                                "label": "我要請假",
-                                "text": "我要請假"
-                            },
-                            {
-                                "type": "message",
-                                "label": "查詢 / 銷假",
-                                "text": "查詢請假 / 銷假"
+                fetch('http://34.80.63.226:3003/lineApi/getLineRoles/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "lineBotId": userID,
+                        "lineId": lineBotID
+                    })
+                })
+                .then(res =>
+                    res.json()
+                )
+                .then(json => {
+                    if(json.Result==='T' && json.Message[0].role===1){
+                        rtnMsg({
+                            "type": "template",
+                            "altText": "this is a buttons template",
+                            "template": {
+                                "type": "buttons",
+                                "actions": [
+                                    {
+                                        "type": "message",
+                                        "label": "我要請假",
+                                        "text": "我要請假"
+                                    },
+                                    {
+                                        "type": "message",
+                                        "label": "查詢 / 銷假",
+                                        "text": "查詢請假 / 銷假"
+                                    }
+                                ],
+                                "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039367.svg",
+                                "title": "請假 / 銷假",
+                                "text": "請選擇您要操作的項目"
                             }
-                        ],
-                        "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039367.svg",
-                        "title": "請假 / 銷假",
-                        "text": "請選擇您要操作的項目"
+                        });
+                    }else{
+                        rtnMsg({
+                            "type": "text",
+                            "text": "您沒有此權限操作，請註冊身份取得資格。\n您可以：\n①點擊下方按鈕「立即註冊」\n或是\n②點擊選單中的「身份註冊」\n\n＊如有問題請致電安親班由班務人員為您服務\n\n(quick reply button)👤立即註冊"
+                        })
                     }
-                });
+                })
             }
             if (str === "查詢請假 / 銷假") {
-                // step1: 選擇學生
                 var leaveUrl = "http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?"
-                leaveUrl = leaveUrl + "lineid=" + userID + '&' + 'lineBotID=' + lineBotID
+                leaveUrl = leaveUrl + "lineid=" + lineBotID + '&' + 'lineBotID=' +userID 
 
                 // step1: 取得學生名單
                 fetch(leaveUrl, {
                     method: 'GET'
                 })
-                    .then(res =>
-                        // 轉成 json
-                        res.json()
-                    )
-                    .then((json) => {
-                        // 取得學生名稱
-                        var stuList = json.Message
+                .then(res =>
+                    // 轉成 json
+                    res.json()
+                )
+                .then((json) => {
+                    // 取得學生名稱
+                    var stuList = json.Message
 
-                        if (json.Result === 'T') {
-                            var studentsList = []
-                            var msgStr = {
-                                "type": "template",
-                                "altText": "this is a buttons template",
-                                "template": {
-                                    "type": "buttons",
-                                    "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
-                                    "title": "請選擇要請假的學生姓名",
-                                    "text": "請一次操作一位學員"
-                                }
+                    if (json.Result === 'T') {
+                        var studentsList = []
+                        var msgStr = {
+                            "type": "template",
+                            "altText": "this is a buttons template",
+                            "template": {
+                                "type": "buttons",
+                                "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
+                                "title": "請選擇要請假的學生姓名",
+                                "text": "請一次操作一位學員"
                             }
-
-                            stuList.forEach((data) => {
-                                var stuObj = {
-                                    "type": "postback",
-                                    "mode": "date",
-                                    "initial": "2019-08-07",
-                                    "max": "2020-08-07",
-                                    "min": "2019-08-07"
-                                }
-                                // 偷偷將 學生id與 name 塞入
-                                stuObj.data = `查詢請假-${data.id}-${data.name}`
-                                stuObj.label = data.name
-                                studentsList.push(stuObj)
-                            })
-
-                            msgStr.template.actions = studentsList
-
-                            // 傳送 JSON msg
-                            rtnMsg(msgStr)
-
-                        } else if (json.Result === 'F') {
-                            return new Promise((res, rej) => {
-                                rej(json.Message)
-                            })
                         }
 
-                    })
-                    .catch((err) => {
-                        console.log('錯誤:', err);
-                    })
+                        stuList.forEach((data) => {
+                            var stuObj = {
+                                "type": "postback",
+                                "mode": "date",
+                                "initial": "2019-08-07",
+                                "max": "2020-08-07",
+                                "min": "2019-08-07"
+                            }
+                            // 偷偷將 學生id與 name 塞入
+                            stuObj.data = `查詢請假-${data.id}-${data.name}`
+                            stuObj.label = data.name
+                            studentsList.push(stuObj)
+                        })
 
-                // step2: 搜尋請假紀錄 leave/getLeaveList
-                // step3: 進行銷假
+                        msgStr.template.actions = studentsList
+
+                        // 傳送 JSON msg
+                        rtnMsg(msgStr)
+
+                    } else if (json.Result === 'F') {
+                        return new Promise((res, rej) => {
+                            rej(json.Message)
+                        })
+                    }
+
+                })
+                .catch((err) => {
+                    console.log('錯誤:', err);
+                })
             }
             if (str.indexOf('我要銷假') > -1) {
                 // http://34.80.63.226:3003/leave/deleteLeave?id=14
@@ -309,63 +322,89 @@ bot.on('message', function (event) {
             }
 
             if (str === "今日功課 / 成績") {
-                var leaveUrl = "http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?"
-                leaveUrl = leaveUrl + "lineid=" + userID + '&' + 'lineBotID=' + lineBotID
+                // TODO: role check 身份驗證過了讓他開啟此選單 (訪客部分)
 
-                // 今日功課查詢
-                fetch(leaveUrl, {
-                    // fetch('http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?lineid=56sd4f5s6df4&lineBotID=U3b90812bccb505e9a03722a0a772c894', {
-                    method: 'GET'
+                fetch('http://34.80.63.226:3003/lineApi/getLineRoles/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // 先以家長進行測試
+                    body: JSON.stringify({
+                        "lineBotId": userID,
+                        "lineId": lineBotID
+                    })
                 })
-                    .then(res =>
-                        // 轉成 json
-                        res.json()
-                    )
-                    .then((json) => {
-                        // 取得學生名稱
-                        var stuList = json.Message
+                .then(res =>
+                    res.json()
+                )
+                .then(json => {
+                    console.log('驗證身份',json.Result, json.Message[0].role)
+                    if(json.Result==='T' && json.Message[0].role===1){
+                        var leaveUrl = "http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?"
+                        leaveUrl = leaveUrl + "lineid=" + lineBotID + '&' + 'lineBotID=' + userID
 
-                        if (json.Result === 'T') {
-                            var studentsList = []
-                            var msgStr = {
-                                "type": "template",
-                                "altText": "this is a buttons template",
-                                "template": {
-                                    "type": "buttons",
-                                    "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
-                                    "title": "請選擇要查詢的學生姓名",
-                                    "text": "請一次操作一位學員"
+                        // 今日功課查詢
+                        fetch(leaveUrl, {
+                            // fetch('http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?lineid=56sd4f5s6df4&lineBotID=U3b90812bccb505e9a03722a0a772c894', {
+                            method: 'GET'
+                        })
+                        .then(res =>
+                            // 轉成 json
+                            res.json()
+                        )
+                        .then((json) => {
+                            // 取得學生名稱
+                            var stuList = json.Message
+
+                            if (json.Result === 'T') {
+                                var studentsList = []
+                                var msgStr = {
+                                    "type": "template",
+                                    "altText": "this is a buttons template",
+                                    "template": {
+                                        "type": "buttons",
+                                        "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039350.svg",
+                                        "title": "請選擇要查詢的學生姓名",
+                                        "text": "請一次操作一位學員"
+                                    }
                                 }
+
+                                stuList.forEach((data) => {
+                                    var stuObj = {
+                                        "type": "postback"
+                                    }
+
+                                    stuObj.data = `今日查詢-${data.id}-${data.name}`
+                                    stuObj.label = data.name
+                                    stuObj.text = data.name
+                                    studentsList.push(stuObj)
+                                })
+
+                                msgStr.template.actions = studentsList
+
+                                // 傳送 JSON msg
+                                rtnMsg(msgStr)
+
+                            } else if (json.Result === 'F') {
+                                return new Promise((res, rej) => {
+                                    rej(json.Message)
+                                })
                             }
-
-                            stuList.forEach((data) => {
-                                var stuObj = {
-                                    "type": "postback"
-                                }
-
-                                stuObj.data = `今日查詢-${data.id}-${data.name}`
-                                stuObj.label = data.name
-                                stuObj.text = data.name
-                                studentsList.push(stuObj)
-                            })
-
-                            msgStr.template.actions = studentsList
-
-                            // 傳送 JSON msg
-                            rtnMsg(msgStr)
-
-                        } else if (json.Result === 'F') {
-                            return new Promise((res, rej) => {
-                                rej(json.Message)
-                            })
-                        }
 
                     })
                     .catch((err) => {
                         console.log('錯誤:', err);
                     })
 
-                // 今日成績查詢
+                    }
+                    else{
+                        rtnMsg({
+                            "type": "text",
+                            "text": "您沒有此權限操作，請註冊身份取得資格。\n您可以：\n①點擊下方按鈕「立即註冊」\n或是\n②點擊選單中的「身份註冊」\n\n＊如有問題請致電安親班由班務人員為您服務\n\n(quick reply button)👤立即註冊"
+                        })
+                    }
+                })
 
             }
             if (str === "身份註冊") {
@@ -399,8 +438,33 @@ bot.on('message', function (event) {
                 rtnMsg(msgStr)
             }
             if (str === "切換選單") {
+                // TODO: role check 身份驗證過了讓他開啟此選單 (訪客部分)
                 // TODO: 切換樣板
-                rtnMsg(msgStr)
+                fetch('http://34.80.63.226:3003/lineApi/getLineRoles/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // 先以家長進行測試
+                    body: JSON.stringify({
+                        "lineBotId": userID,
+                        "lineId": lineBotID
+                    })
+                })
+                .then(res =>
+                    res.json()
+                )
+                .then(json => {
+                    if(json.Ressult==='T' && json.Message[0].role===3 || json.Message[0].role===4 ||json.Message[0].role===9){
+                        console.log('切換表單')
+                    }
+                    else{
+                        rtnMsg({
+                            "type": "text",
+                            "text": "您沒有此權限操作，請註冊身份取得資格。\n您可以：\n①點擊下方按鈕「立即註冊」\n或是\n②點擊選單中的「身份註冊」\n\n＊如有問題請致電安親班由班務人員為您服務\n\n(quick reply button)👤立即註冊"
+                        })
+                    }
+                })
             }
 
         }
@@ -478,43 +542,43 @@ bot.on('follow', function (event) {
                 "lineId": botID
             })
         })
+        .then(res =>
+            res.json()
+        )
+        .then(json => {
+            // 設定 richmenu
+            // setRichmenu(json.Message[0].role,userID)
+            // 測次用
+            setRichmenuUrl = 'http://34.80.63.226:3003/lineApi/setRichmenu?'
+            setRichmenuUrl = setRichmenuUrl + `type=${json.Message[0].role}&`
+            setRichmenuUrl = setRichmenuUrl + 'userID=' + userID
+
+            fetch(setRichmenuUrl, {
+                method: 'GET'
+            })
             .then(res =>
+                // 轉成 json
                 res.json()
             )
-            .then(json => {
-                // 設定 richmenu
-                // setRichmenu(json.Message[0].role,userID)
-                // 測次用
-                setRichmenuUrl = 'http://localhost:3001/setRichmenu?'
-                setRichmenuUrl = setRichmenuUrl + `type=${json.Message[0].role}&`
-                setRichmenuUrl = setRichmenuUrl + 'userID=' + userID
+            .then((json) => {
 
-                fetch(setRichmenuUrl, {
-                    method: 'GET'
-                })
-                    .then(res =>
-                        // 轉成 json
-                        res.json()
-                    )
-                    .then((json) => {
+                if (json.Result === 'T') {
+                    // console.log('setRichmenuUrl',json)
+                    // 傳送 JSON msg'
+                    console.log('json.Message', json.Message)
+                    rtnMsg(json.Message)
 
-                        if (json.Result === 'T') {
-                            // console.log('setRichmenuUrl',json)
-                            // 傳送 JSON msg'
-                            console.log('json.Message', json.Message)
-                            rtnMsg(json.Message)
-
-                        } else if (json.Result === 'R') {
-                            return new Promise((res, rej) => {
-                                rej(json.Message)
-                            })
-                        }
+                } else if (json.Result === 'R') {
+                    return new Promise((res, rej) => {
+                        rej(json.Message)
                     })
-                    .catch((err) => {
-                        console.log('錯誤:', err);
-                    })
-
+                }
             })
+            .catch((err) => {
+                console.log('錯誤:', err);
+            })
+
+        })
 
     })
 
@@ -547,17 +611,9 @@ bot.on('postback', function (event) {
         leaveObj.startDate = event.postback.params.date
         leaveObj.endDate = event.postback.params.date
         leaveObj.relation = "父親" //先寫死
-        leaveObj.vendorid = "A1" //先寫死
+        // leaveObj.vendorid = "A1" //先寫死
 
         myLeavePostBack.push(leaveObj)
-
-        // sid	學生資料表流水序號	int(11)
-        // startDate	請假起始日期	date
-        // endDate	請假結束日期	date
-        // type	請假類型	int(11)
-        // remark	備註	varchar(1024)
-        // relation	請假人關係	varchar(64)
-        // vendorid	廠商代碼	varchar(50)
 
         // 選擇哪一位學生後進入請假類型
         // tag/getTag/leave/lineApi API
@@ -982,6 +1038,7 @@ bot.on('postback', function (event) {
         getStudentHomeworkUrl = getStudentHomeworkUrl + 'sid=' + sid + '&'
         getStudentHomeworkUrl = getStudentHomeworkUrl + 'searchDate=' + searchDate + '&'
         getStudentHomeworkUrl = getStudentHomeworkUrl + 'lineBotID=' + userID
+        console.log('getStudentHomeworkUrl',getStudentHomeworkUrl)
 
         fetch(getStudentHomeworkUrl, {
             method: 'GET'
@@ -991,6 +1048,7 @@ bot.on('postback', function (event) {
             res.json()
         )
         .then((json) => {
+            console.log('json',json)
             // 取得學生名稱
             if (json.Result === 'T') {
                 var contents = []
@@ -1275,7 +1333,7 @@ function rtnMsg(e, msg) {
 // 請假 function ()
 function leave(myLeavePostBack, e) {
 
-    fetch(APIUrl + 'leave/setLeave/back', {
+    fetch(APIUrl + 'leave/setLeave/line', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
