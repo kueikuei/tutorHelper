@@ -1569,7 +1569,7 @@ app.post('/linewebhook', linebotParser)
 
 // Bot所監聽的webhook路徑與port
 // for local test
-var server = app.listen(process.env.PORT || 8080, function (req, res) {
+var server = app.listen(config.port, function (req, res) {
     var port = server.address().port;
     console.log('目前的port是', port);
 });
