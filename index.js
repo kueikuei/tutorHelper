@@ -1,51 +1,18 @@
-var linebot = require('linebot');
-// var dbConfig = require('./mySQLConfig')
+const linebot = require('linebot');
 const fetch = require('node-fetch');
-// var setRichmenu = require('./restapi/setRichmenu')
+const express = require('express');
 
-// 引用 python 程式
-var spawn = require("child_process").spawn;
-// var connection = mysql.createConnection({
-//     host: dbConfig.host,
-//     user: dbConfig.user,
-//     password: dbConfig.password,
-//     database: dbConfig.database
-// });
-// connection.connect();
-
-var express = require('express');
-var admin = require("firebase-admin");
-admin.initializeApp({
-    // credential: admin.credential.cert(JSON.parse(process.env.FirebaseKey)),
-    credential: admin.credential.cert(require("./sabot-dca8c-firebase-adminsdk-mqrmy-1c07d286ac.json")),
-    databaseURL: "https://sabot-dca8c.firebaseio.com"
-});
-// 建立 db 連線
-var db = admin.database()
-var bot
-// [key, key, key]
-var keyList = []
-
-var APIUrl = 'http://34.80.63.226:3003/'
-
-// 本地環境測試
-var localConfig = require('./localConfig.json')
-// var localConfig
-if (localConfig) {
-    bot = linebot({
-        channelId: localConfig[0].channelId,
-        channelAccessToken: localConfig[0].channelAccessToken,
-        channelSecret: localConfig[0].channelSecret
-    })
-    // 遠端機台
-}
-else {
-    bot = linebot({
-        channelId: process.env.channelId,
-        channelAccessToken: process.env.ChannelAccessToken,
-        channelSecret: process.env.ChannelSecret
-    })
-}
+let config = require('./config.json')
+// 定義 bot
+var bot = linebot({
+                channelId: config.bot.channelId,
+                channelAccessToken: config.bot.channelAccessToken,
+                channelSecret: config.bot.channelSecret
+            })
+// 教師驗證碼開關
+var vercode = false;
+// API位置
+var APIUrl = config.lineAPI
 
 // 訊息事件
 bot.on('message', function (event) {
@@ -182,6 +149,7 @@ bot.on('message', function (event) {
                 }
 
             }
+            // TODO:其他要再調整
             if (myLeavePostBack[0] && myLeavePostBack[0].type === '4') {
                 myLeavePostBack[0].remark = event.message.text
                 if (myLeavePostBack[0].remark !== '請輸入請假理由：') {
@@ -205,7 +173,8 @@ bot.on('message', function (event) {
                     res.json()
                 )
                 .then(json => {
-                    if(json.Result==='T' && json.Message[0].role===1){
+                    var role = json.Message[0].role
+                    if(json.Result==='T' && role===1 || role ===3 || role===4 || role===5 ){
                         rtnMsg({
                             "type": "template",
                             "altText": "this is a buttons template",
@@ -295,6 +264,96 @@ bot.on('message', function (event) {
                     console.log('錯誤:', err);
                 })
             }
+
+            // 剩下銷假用
+            if (str.indexOf('查看更多') > -1){
+                var studentName = str.split('-')[1]
+                var sid = str.split('-')[2]
+
+                // ---- 測試用 ----- //
+                var startDate = '2018-01-01'
+                var endDate = '2019-12-31'
+                var botID = 'U3b90812bccb505e9a03722a0a772c894'
+                // ---- 測試用 ----- //
+
+                var leaveListUrl = APIUrl + 'leave/getLeaveList?'
+                leaveListUrl = leaveListUrl + 'sid=' + sid + '&'
+                leaveListUrl = leaveListUrl + 'lineBotID=' + botID + '&'
+                leaveListUrl = leaveListUrl + 'startDate=' + startDate + '&'
+                leaveListUrl = leaveListUrl + 'endDate=' + endDate + '&'
+
+                fetch(leaveListUrl, {
+                    method: 'GET'
+                })
+                .then(res =>
+                    // 轉成 json
+                    res.json()
+                )
+                .then((json) => {
+                    console.log('getLeaveList', json)
+                    // 取得學生名稱
+                    if (json.Result === 'T') {
+                        var columns = []
+                        var temp = {
+                            "type": "template",
+                            "altText": "this is a carousel template",
+                            "template": {
+                                "type": "carousel",
+                                "actions": []
+                            }
+                        }
+
+                        var leaveSortList = json.Message.sort((a, b) => {
+
+                            return a.startDate > b.startDate ? 1 : -1;
+
+                        })
+
+                        leaveSortList.slice(10,leaveSortList.length).forEach(data => {
+                            var myData = {
+                                "title": `請假日期：${data.startDate}~${data.endDate}`,
+                                "text": `請假學員：${studentName}`,
+                                "actions": [
+                                    {
+                                        "type": "message",
+                                        "label": "我要銷假",
+                                        "text": `我要銷假-${data.id}`
+                                    }
+
+                                ]
+                            }
+
+                            columns.push(myData)
+                        })
+                        
+                        // 先兩層查詢，未來有需要再開放
+                        // columns.push({
+                        //     "title": "查看更多請假時間",
+                        //     "text": "點擊查看更多時間",
+                        //     "actions": [
+                        //         {
+                        //             "type": "message",
+                        //             "label": "查看更多",
+                        //             "text": `查看更多-${studentName}-${sid}`
+                        //         }
+                        //     ]
+                        // })
+
+                        temp.template.columns = columns
+                        rtnMsg(temp)
+                    } else if (json.Result === 'R') {
+                        return new Promise((res, rej) => {
+                            rej(json.Message)
+                        })
+                    }
+                })
+                .catch((err) => {
+                    console.log('錯誤:', err);
+                })
+                        
+
+            }
+
             if (str.indexOf('我要銷假') > -1) {
                 // http://34.80.63.226:3003/leave/deleteLeave?id=14
                 var lvID = str.split('-')[1]
@@ -339,8 +398,10 @@ bot.on('message', function (event) {
                     res.json()
                 )
                 .then(json => {
-                    console.log('驗證身份',json.Result, json.Message[0].role)
-                    if(json.Result==='T' && json.Message[0].role===1){
+                    var role = json.Message[0].role
+
+                    console.log('驗證身份',json.Result, role)
+                    if(json.Result==='T' && role===1 || role ===3 || role===4 || role===5){
                         var leaveUrl = "http://34.80.63.226:3003/studentAccount/getRegisterDetail/stu?"
                         leaveUrl = leaveUrl + "lineid=" + lineBotID + '&' + 'lineBotID=' + userID
 
@@ -407,6 +468,7 @@ bot.on('message', function (event) {
                 })
 
             }
+
             if (str === "身份註冊") {
                 var msgStr = {
                     "type": "template",
@@ -425,9 +487,9 @@ bot.on('message', function (event) {
                                 "uri": "line://app/106"
                             },
                             {
-                                "type": "uri",
+                                "type": "message",
                                 "label": "班務人員",
-                                "uri": "line://app/102"
+                                "text": "請輸入您的身份驗證碼"
                             }
                         ],
                         "thumbnailImageUrl": "https://image.flaticon.com/icons/svg/1039/1039337.svg",
@@ -437,10 +499,57 @@ bot.on('message', function (event) {
                 }
                 rtnMsg(msgStr)
             }
+
+            // ----- 行政人員驗證為主 -----
+            if(vercode){
+                console.log('vercode',vercode)
+
+                var setStaffUrl = APIUrl + 'account/setStaffLineId'
+
+                fetch(setStaffUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // 先以家長進行測試
+                    body: JSON.stringify({
+                        "code": str,
+                        "lineId": lineBotID
+                    })
+                })
+                .then(res =>
+                    res.json()
+                )
+                .then(json => {
+                    if(json.Result==='T'){
+                        rtnMsg({
+                            "type": "text",
+                            "text": "🎉恭喜您通過驗證，點擊選單即可開始使用功能～\n"
+                        })
+                    }
+                    else{
+                        rtnMsg({
+                            "type": "text",
+                            "text": `${json.Message}。您好：您的驗證未通過，請點擊「身份註冊」重新申請，或是致電安親班由班務人員為您處理。`
+                          })
+                    }
+                })
+
+                vercode = false
+            }
+
+            if (str === '請輸入您的身份驗證碼'){
+                vercode = true
+            }
+
+            
+            // ----- 行政人員驗證為主 -----
+
             if (str === "切換選單") {
                 // TODO: role check 身份驗證過了讓他開啟此選單 (訪客部分)
                 // TODO: 切換樣板
                 fetch('http://34.80.63.226:3003/lineApi/getLineRoles/', {
+                // fetch('http://34.80.63.226:3003/lineApi/getLineRoles/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -455,8 +564,39 @@ bot.on('message', function (event) {
                     res.json()
                 )
                 .then(json => {
-                    if(json.Ressult==='T' && json.Message[0].role===3 || json.Message[0].role===4 ||json.Message[0].role===9){
+                    // var role = json.Message[0].role
+                    var role = 3
+
+                    if(json.Result==='T' && role===3 || role===4 ||role===5){
                         console.log('切換表單')
+
+                        // setRichmenuUrl = 'http://34.80.63.226:3003/lineApi/setRichmenu?'
+                        setRichmenuUrl = 'http://localhost:3001/lineApi/setRichmenu?'
+                        setRichmenuUrl = setRichmenuUrl + `type=3&` //TODO: 先定死
+                        setRichmenuUrl = setRichmenuUrl + 'userID=' + userID
+
+                        fetch(setRichmenuUrl, {
+                            method: 'GET'
+                        })
+                        .then(res =>
+                            // 轉成 json
+                            res.json()
+                        )
+                        .then((json) => {
+
+                            if (json.Result === 'T') {
+                                console.log('json.Message', json.Message)
+                                rtnMsg(json.Message)
+
+                            } else if (json.Result === 'R') {
+                                return new Promise((res, rej) => {
+                                    rej(json.Message)
+                                })
+                            }
+                        })
+                        .catch((err) => {
+                            console.log('錯誤:', err);
+                        })
                     }
                     else{
                         rtnMsg({
@@ -698,8 +838,9 @@ bot.on('postback', function (event) {
         // var startDate = `${y}-${m}-${d}`
         // var endDate = event.postback.params.date
         var studentName = key[2]
+        var sid = key[1]
 
-        var sid = '27'
+        // var sid = '27'
         var botID = 'U3b90812bccb505e9a03722a0a772c894'
         var startDate = '2018-01-01'
         var endDate = '2019-12-31'
@@ -713,51 +854,71 @@ bot.on('postback', function (event) {
         fetch(leaveListUrl, {
             method: 'GET'
         })
-            .then(res =>
-                // 轉成 json
-                res.json()
-            )
-            .then((json) => {
-                console.log('getLeaveList', json)
-                // 取得學生名稱
-                if (json.Result === 'T') {
-                    var columns = []
-                    var temp = {
-                        "type": "template",
-                        "altText": "this is a carousel template",
-                        "template": {
-                            "type": "carousel",
-                            "actions": []
-                        }
+        .then(res =>
+            // 轉成 json
+            res.json()
+        )
+        .then((json) => {
+            console.log('getLeaveList', json)
+            // 取得學生名稱
+            if (json.Result === 'T') {
+                var columns = []
+                var temp = {
+                    "type": "template",
+                    "altText": "this is a carousel template",
+                    "template": {
+                        "type": "carousel",
+                        "actions": []
                     }
-                    json.Message.forEach(data => {
-
-                        var myData = {
-                            "title": `請假日期：${data.startDate}~${data.endDate}`,
-                            "text": `請假學員：${studentName}`,
-                            "actions": [
-                                {
-                                    "type": "message",
-                                    "label": "我要銷假",
-                                    "text": `我要銷假-${data.id}`
-                                }
-                            ]
-                        }
-
-                        columns.push(myData)
-                    })
-
-                    temp.template.columns = columns
-                    rtnMsg(temp)
-                } else if (json.Result === 'R') {
-                    return new Promise((res, rej) => {
-                        rej(json.Message)
-                    })
                 }
-            })
-            .catch((err) => {
-                console.log('錯誤:', err);
-            })
+
+                // json.Message.slice(0,9).forEach(data => {
+                var leaveSortList = json.Message.sort((a, b) => {
+
+                    return a.startDate > b.startDate ? 1 : -1;
+
+                })
+
+                leaveSortList.slice(0,9).forEach(data => {
+                    var myData = {
+                        "title": `請假日期：${data.startDate}~${data.endDate}`,
+                        "text": `請假學員：${studentName}`,
+                        "actions": [
+                            {
+                                "type": "message",
+                                "label": "我要銷假",
+                                "text": `我要銷假-${data.id}`
+                            }
+
+                        ]
+                    }
+
+                    columns.push(myData)
+                })
+
+                columns.push({
+                    "title": "查看更多請假時間",
+                    "text": "點擊查看更多時間",
+                    "actions": [
+                        {
+                            "type": "message",
+                            "label": "查看更多",
+                            "text": `查看更多-${studentName}-${sid}`
+                        }
+                    ]
+                })
+
+                temp.template.columns = columns
+                rtnMsg(temp)
+            } else if (json.Result === 'R') {
+                return new Promise((res, rej) => {
+                    rej(json.Message)
+                })
+            }
+        })
+        .catch((err) => {
+            console.log('錯誤:', err);
+        })
 
     }
 
@@ -1126,9 +1287,13 @@ bot.on('postback', function (event) {
                         "text": `${data.homeworkContent}`
                     }
                     var myData3 = {
+                        "type": "text",
+                        "text": `${data.activityContent}`
+                    }
+                    var myData4 = {
                         "type": "separator"
                     }
-                    contents.push(myData1, myData2, myData3)
+                    contents.push(myData1, myData2, myData3, myData4)
                 })
 
                 honeWorkTemp.contents.body.contents = contents
@@ -1383,8 +1548,6 @@ function leave(myLeavePostBack, e) {
         })
 }
 
-
-
 // bot.on('memberJoined',function (data){
 //     console.log('memberJoined',data)
 // })
@@ -1393,14 +1556,6 @@ function leave(myLeavePostBack, e) {
 //     console.log('memberLeft',event)
 // });
 
-// TODO: 後續替換成 MySQL
-// 監聽 firebase 資料庫
-// 每一次資料庫有更新這邊都能偵測
-// 更新清單資料以利使用
-db.ref('tutor').on('value', function (snapshot) {
-    var dataKeys = Object.keys(snapshot.val())
-    keyList = dataKeys
-})
 // 開啟 port
 const app = express();
 const linebotParser = bot.parser();
